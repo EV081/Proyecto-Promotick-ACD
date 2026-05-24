@@ -66,6 +66,7 @@ async def upload_file(file: UploadFile = File(..., description="Archivo .xls, .x
     status_code=status.HTTP_200_OK,
 )
 async def list_uploaded_files():
+    """Retorna los nombres de todos los archivos actualmente cargados en memoria."""
     files_info = []
     for fname, store in uploaded_store.items():
         df = store.get("df_raw")
