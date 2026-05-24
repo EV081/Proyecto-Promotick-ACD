@@ -4,41 +4,7 @@ Backend desarrollado en FastAPI para la gestión y limpieza de datos de tickets 
 
 ---
 
-## Arquitectura
-
-```
-Cliente (HTTP)
-     |
-     v
-+------------------+
-|    main.py       |  FastAPI app, CORS, registro de routers
-+------------------+
-        |
-        +---------------------------+
-        |                           |
-        v                           v
-+---------------+         +------------------+
-| /upload       |         | /clean           |
-| upload.py     |         | clean.py         |
-+---------------+         +------------------+
-        |                           |
-        v                           v
-+-----------------------------------------------+
-|                  state.py                     |
-|  uploaded_store  |  clean_store               |
-|  (archivos raw)  |  (DataFrames limpios)      |
-+-----------------------------------------------+
-                            |
-                            v
-              +---------------------------+
-              |    core/cleaner.py        |
-              |  load_raw_dataframe()     |
-              |  clean_dataframe()        |
-              |  build_summary()          |
-              +---------------------------+
-```
-
-**Flujo de datos:**
+## Flujo de datos
 
 ```
 POST /upload/file  -->  uploaded_store (raw)
