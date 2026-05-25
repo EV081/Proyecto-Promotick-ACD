@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import upload, clean
+from app.routers import upload, clean, dashboard
 
 app = FastAPI(
     title="Promotick Data API",
@@ -30,6 +30,7 @@ app.add_middleware(
 # Registrar routers
 app.include_router(upload.router)
 app.include_router(clean.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/", tags=["Root"])
@@ -43,6 +44,11 @@ async def root():
             "run_cleaning": "POST /clean/run",
             "download_clean": "GET /clean/download",
             "clean_status": "GET /clean/status",
+            "dashboard_info_tickets": "GET /dashboard/getInfoTickets",
+            "dashboard_tiempo_promedio": "GET /dashboard/getTiempoPromedio",
+            "dashboard_primera_respuesta": "GET /dashboard/getTiempoPrimeraRespuesta",
+            "dashboard_sla": "GET /dashboard/getCumplimientoSLA",
+            "dashboard_tickets_by": "GET /dashboard/getTicketsBy",
         },
     }
 
