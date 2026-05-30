@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal, Optional
 from fastapi import APIRouter, HTTPException, Query, status
 from app.state import clean_store
@@ -156,3 +157,166 @@ async def get_tickets_by(
         result = df.groupby("agente").size()
 
     return {"diccionario": {str(k): int(v) for k, v in result.items()}}
+
+
+@router.get(
+    "/getRangoFechas",
+    summary="Fecha del primer y último ticket disponible",
+    status_code=status.HTTP_200_OK,
+)
+async def get_rango_fechas():
+    df = _get_clean_df()
+    if "tiempo_de_creación" not in df.columns:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Columna 'tiempo_de_creación' no encontrada en los datos limpios.",
+        )
+
+    creacion = pd.to_datetime(df["tiempo_de_creación"], errors="coerce").dropna()
+    if creacion.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay fechas de creación válidas en los datos limpios.",
+        )
+
+    return {
+        "fechaInicio": creacion.min().date().isoformat(),
+        "fechaFin": creacion.max().date().isoformat(),
+        "totalTickets": int(creacion.shape[0]),
+    }
+
+
+def _empty_reporte(fecha_inicio_str: str, fecha_fin_str: str) -> dict:
+    return {
+        "periodo": {"fechaInicio": fecha_inicio_str, "fechaFin": fecha_fin_str},
+        "ticketsCreados": 0,
+        "ticketsAbiertos": 0,
+        "ticketsCerrados": 0,
+        "backlogTickets": 0,
+        "promedioPrimeraRespuestaHoras": None,
+        "promedioAtencionHoras": None,
+        "cumplimientoSLA": {"porcentaje": None, "withinSLA": 0, "violatedSLA": 0},
+        "ticketsPorPrioridad": {},
+        "ticketsPorTipo": {},
+        "ticketsPorAnalista": {},
+        "sinDatos": True,
+    }
+
+
+@router.get(
+    "/getReporteOperacional",
+    summary="Reporte operacional consolidado para un periodo de fechas",
+    status_code=status.HTTP_200_OK,
+)
+async def get_reporte_operacional(
+    fecha_inicio: str = Query(..., description="Fecha de inicio del periodo en formato ISO YYYY-MM-DD."),
+    fecha_fin: str = Query(..., description="Fecha de fin del periodo en formato ISO YYYY-MM-DD."),
+):
+    # 1. Validación del periodo
+    try:
+        inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        fin = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Formato de fecha inválido. Use 'YYYY-MM-DD' (ej: 2026-05-30).",
+        )
+
+    if inicio > fin:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"La fecha de inicio ({fecha_inicio}) no puede ser posterior "
+                f"a la fecha de fin ({fecha_fin})."
+            ),
+        )
+
+    # Incluir todo el día final
+    fin_inclusivo = fin + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+
+    # 2. Filtrado del dataframe
+    df = _get_clean_df()
+    if "tiempo_de_creación" not in df.columns:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Columna 'tiempo_de_creación' no encontrada en los datos limpios.",
+        )
+
+    df = df.copy()
+    df["tiempo_de_creación"] = pd.to_datetime(df["tiempo_de_creación"], errors="coerce")
+    df_f = df[
+        (df["tiempo_de_creación"] >= inicio) & (df["tiempo_de_creación"] <= fin_inclusivo)
+    ]
+
+    if df_f.empty:
+        return _empty_reporte(fecha_inicio, fecha_fin)
+
+    # 3. Cálculo de métricas
+    # Volumen y backlog
+    abiertos = int((df_f["esta_abierto"] == 1).sum()) if "esta_abierto" in df_f.columns else 0
+    cerrados = int((df_f["esta_abierto"] == 0).sum()) if "esta_abierto" in df_f.columns else 0
+    backlog = abiertos - cerrados
+
+    # Promedio de primera respuesta (timedelta -> horas)
+    promedio_primera_resp = None
+    col_resp = "primer_tiempo_de_respuesta_en_horas"
+    if col_resp in df_f.columns:
+        if pd.api.types.is_timedelta64_dtype(df_f[col_resp]):
+            horas = df_f[col_resp].dt.total_seconds() / 3600
+        else:
+            horas = pd.to_numeric(df_f[col_resp], errors="coerce")
+        horas_validas = horas[horas > 0]
+        if not horas_validas.empty:
+            promedio_primera_resp = round(float(horas_validas.mean()), 4)
+
+    # Promedio de atención (registro -> cierre, en horas)
+    promedio_atencion = None
+    if "lead_time_horas" in df_f.columns:
+        mean_atencion = pd.to_numeric(df_f["lead_time_horas"], errors="coerce").mean()
+        if not pd.isna(mean_atencion):
+            promedio_atencion = round(float(mean_atencion), 4)
+
+    # Cumplimiento de SLA
+    sla_pct = None
+    within_sla = 0
+    violated_sla = 0
+    if "cumple_sla" in df_f.columns:
+        total_sla = int(df_f["cumple_sla"].count())
+        within_sla = int(df_f["cumple_sla"].sum())
+        violated_sla = total_sla - within_sla
+        if total_sla > 0:
+            sla_pct = round(within_sla / total_sla * 100, 2)
+
+    # Distribuciones
+    por_prioridad = {}
+    if "prioridad" in df_f.columns:
+        por_prioridad = {str(k): int(v) for k, v in df_f["prioridad"].value_counts().items()}
+
+    por_tipo = {}
+    if "tipo" in df_f.columns:
+        por_tipo = {str(k): int(v) for k, v in df_f["tipo"].value_counts().head(5).items()}
+
+    por_analista = {}
+    if "agente" in df_f.columns:
+        df_ag = df_f.dropna(subset=["agente"])
+        df_ag = df_ag[df_ag["agente"].astype(str).str.lower().str.strip() != "no agent"]
+        por_analista = {str(k): int(v) for k, v in df_ag["agente"].value_counts().head(5).items()}
+
+    return {
+        "periodo": {"fechaInicio": fecha_inicio, "fechaFin": fecha_fin},
+        "ticketsCreados": int(len(df_f)),
+        "ticketsAbiertos": abiertos,
+        "ticketsCerrados": cerrados,
+        "backlogTickets": backlog,
+        "promedioPrimeraRespuestaHoras": promedio_primera_resp,
+        "promedioAtencionHoras": promedio_atencion,
+        "cumplimientoSLA": {
+            "porcentaje": sla_pct,
+            "withinSLA": within_sla,
+            "violatedSLA": violated_sla,
+        },
+        "ticketsPorPrioridad": por_prioridad,
+        "ticketsPorTipo": por_tipo,
+        "ticketsPorAnalista": por_analista,
+        "sinDatos": False,
+    }
