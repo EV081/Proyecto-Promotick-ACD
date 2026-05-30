@@ -86,6 +86,15 @@ def clean_dataframe(df_raw: pd.DataFrame) -> pd.DataFrame:
         if campo in df.columns:
             df[campo] = df[campo].astype(str).str.strip().str.capitalize()
 
+    # Normalizar prioridad: el origen exporta valores en inglés.
+    if 'prioridad' in df.columns:
+        df['prioridad'] = df['prioridad'].replace({
+            'Low': 'Baja',
+            'Medium': 'Media',
+            'High': 'Alta',
+            'Urgent': 'Urgente',
+        })
+
     # Tiempos y Fechas
     cols_fechas_principales = [
         'tiempo_de_creación',
@@ -112,10 +121,10 @@ def clean_dataframe(df_raw: pd.DataFrame) -> pd.DataFrame:
     else:
         df['esta_abierto'] = np.nan
 
-    # Backlog Crítico: Alta prioridad + Abierto
+    # Backlog Crítico: Alta o Urgente + Abierto
     if 'prioridad' in df.columns and 'esta_abierto' in df.columns:
         df['backlog_critico'] = np.where(
-            (df['esta_abierto'] == 1) & (df['prioridad'] == 'Alta'), 1, 0
+            (df['esta_abierto'] == 1) & (df['prioridad'].isin(['Alta', 'Urgente'])), 1, 0
         )
 
     # Cumplimiento de SLA

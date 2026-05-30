@@ -1,18 +1,10 @@
 from typing import Literal, Optional
 from fastapi import APIRouter, HTTPException, Query, status
-from app.state import clean_store
 import pandas as pd
 
+from app.routers._common import get_clean_df
+
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
-
-
-def _get_clean_df() -> pd.DataFrame:
-    if not clean_store:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No hay datos limpios. Ejecute POST /clean/run primero.",
-        )
-    return clean_store[list(clean_store.keys())[-1]]
 
 
 @router.get(
@@ -21,7 +13,7 @@ def _get_clean_df() -> pd.DataFrame:
     status_code=status.HTTP_200_OK,
 )
 async def get_info_tickets():
-    df = _get_clean_df()
+    df = get_clean_df()
     if "esta_abierto" not in df.columns:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -42,7 +34,7 @@ async def get_info_tickets():
     status_code=status.HTTP_200_OK,
 )
 async def get_tiempo_promedio():
-    df = _get_clean_df()
+    df = get_clean_df()
     if "lead_time_horas" not in df.columns:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -63,7 +55,7 @@ async def get_tiempo_promedio():
 async def get_tiempo_primera_respuesta(
     idTicket: Optional[str] = Query(default=None, description="ID del ticket. Si se omite, retorna el promedio global.")
 ):
-    df = _get_clean_df()
+    df = get_clean_df()
     col = "primer_tiempo_de_respuesta_en_horas"
     if col not in df.columns:
         raise HTTPException(
@@ -100,7 +92,7 @@ async def get_tiempo_primera_respuesta(
     status_code=status.HTTP_200_OK,
 )
 async def get_cumplimiento_sla():
-    df = _get_clean_df()
+    df = get_clean_df()
     missing = [c for c in ("cumple_sla", "incumple_sla") if c not in df.columns]
     if missing:
         raise HTTPException(
@@ -126,7 +118,7 @@ async def get_tickets_by(
         ..., description="Criterio de agrupación."
     )
 ):
-    df = _get_clean_df()
+    df = get_clean_df()
 
     if by == "prioridad":
         if "prioridad" not in df.columns:

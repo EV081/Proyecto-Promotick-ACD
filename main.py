@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import upload, clean, dashboard
+from app.routers import upload, clean, dashboard, gerencial
 
 app = FastAPI(
     title="Promotick Data API",
@@ -31,6 +31,7 @@ app.add_middleware(
 app.include_router(upload.router)
 app.include_router(clean.router)
 app.include_router(dashboard.router)
+app.include_router(gerencial.router)
 
 
 @app.get("/", tags=["Root"])
@@ -49,6 +50,14 @@ async def root():
             "dashboard_primera_respuesta": "GET /dashboard/getTiempoPrimeraRespuesta",
             "dashboard_sla": "GET /dashboard/getCumplimientoSLA",
             "dashboard_tickets_by": "GET /dashboard/getTicketsBy",
+            "gerencial_tendencia_tickets": "GET /dashboard/gerencial/tendenciaTickets",
+            "gerencial_backlog_critico": "GET /dashboard/gerencial/backlogCritico",
+            "gerencial_incidentes_recurrentes": "GET /dashboard/gerencial/incidentesRecurrentes",
+            "gerencial_categorias_mayor_incidencia": "GET /dashboard/gerencial/categoriasMayorIncidencia",
+            "gerencial_saturacion_operativa": "GET /dashboard/gerencial/saturacionOperativa",
+            "gerencial_demanda_por_area": "GET /dashboard/gerencial/demandaPorArea",
+            "gerencial_comparativo_mensual_atencion": "GET /dashboard/gerencial/comparativoMensualAtencion",
+            "gerencial_mejora_continua": "GET /dashboard/gerencial/mejoraContinua",
         },
     }
 
