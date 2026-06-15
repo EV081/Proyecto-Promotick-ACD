@@ -50,6 +50,8 @@ async def root():
             "dashboard_primera_respuesta": "GET /dashboard/getTiempoPrimeraRespuesta",
             "dashboard_sla": "GET /dashboard/getCumplimientoSLA",
             "dashboard_tickets_by": "GET /dashboard/getTicketsBy",
+            "dashboard_rango_fechas": "GET /dashboard/getRangoFechas",
+            "dashboard_reporte_operacional": "GET /dashboard/getReporteOperacional",
             "gerencial_tendencia_tickets": "GET /dashboard/gerencial/tendenciaTickets",
             "gerencial_backlog_critico": "GET /dashboard/gerencial/backlogCritico",
             "gerencial_incidentes_recurrentes": "GET /dashboard/gerencial/incidentesRecurrentes",

@@ -157,7 +157,7 @@ async def get_tickets_by(
     status_code=status.HTTP_200_OK,
 )
 async def get_rango_fechas():
-    df = _get_clean_df()
+    df = get_clean_df()
     if "tiempo_de_creación" not in df.columns:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -227,7 +227,7 @@ async def get_reporte_operacional(
     fin_inclusivo = fin + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
 
     # 2. Filtrado del dataframe
-    df = _get_clean_df()
+    df = get_clean_df()
     if "tiempo_de_creación" not in df.columns:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
