@@ -47,11 +47,11 @@ export default function MetricCard({ title, value }) {
 
       <div className="mt-5 flex items-center gap-2 text-sm">
         <span className="font-medium text-emerald-600 dark:text-emerald-400">
-          Active
+          Activo
         </span>
 
         <span className="text-slate-400">
-          Current dataset
+          Dataset Actual
         </span>
       </div>
     </div>

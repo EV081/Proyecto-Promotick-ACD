@@ -60,19 +60,17 @@ export const useManagerialMetrics = () => {
         ]);
 
         setData({
-
           trend: safeGet(results[0]),
-          comparison: safeGet(results[1]),
+          comparison: safeGet(results[1]), // Viene formateado del backend
           backlog: safeGet(results[2]),
 
-          demand: safeTransform(safeGet(results[3])),
-          topCategories: safeTransform(safeGet(results[4])),
+          // CAMBIO CRÍTICO: Quitar safeTransform de aquí para demand y topCategories
+          demand: safeGet(results[3]) ?? [],        
+          topCategories: safeGet(results[4]) ?? [], 
 
           operationalSaturation: safeGet(results[5]),
           saturation: safeGet(results[6]),
-
           recurrent: safeTransform(safeGet(results[7]))
-
         });
 
       } catch (error) {

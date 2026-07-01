@@ -33,16 +33,18 @@ export default function BarChartCard({ data, title }) {
         </h2>
 
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Distribution overview
+          Panorama general de la distribucion
         </p>
 
       </div>
 
-      <ResponsiveContainer width="100%" height={320}>
+      {/* 1. CAMBIO: Subimos la altura total del contenedor de 320 a 370 para que las barras recuperen su tamaño */}
+      <ResponsiveContainer width="100%" height={370}>
 
+        {/* 2. CAMBIO: Reducimos bottom de 80 a 55 para subir el borde inferior y quitar el vacío inútil */}
         <BarChart
           data={data}
-          margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
+          margin={{ top: 10, right: 20, left: 15, bottom: 55 }}
         >
 
           <CartesianGrid
@@ -51,9 +53,17 @@ export default function BarChartCard({ data, title }) {
             opacity={0.4}
           />
 
+          {/* 3. CAMBIO: Ajustamos el height de 90 a 65 para que encaje exacto con el nuevo margen */}
           <XAxis
             dataKey="name"
             tick={{ fill: dark ? "#94a3b8" : "#64748b" }}
+            angle={-45}
+            textAnchor="end"
+            height={65}
+            interval={0} 
+            tickFormatter={(value) => 
+              value && value.length > 14 ? `${value.slice(0, 14)}...` : value
+            }
           />
 
           <YAxis
