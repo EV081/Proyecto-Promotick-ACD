@@ -102,6 +102,44 @@ La documentación automática de FastAPI:
 http://localhost:8000/docs
 ```
 
+---
+
+# Ejecucion del Backend
+
+## Requisitos
+
+Tener instalado:
+
+- Python 3.13
+- pip
+
+---
+
+## Instalacion de dependencias
+
+Desde la carpeta del backend:
+
+```bash
+cd Backend_Promotick
+pip install -r requirements.txt
+```
+
+Levantar el backend
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+El backend estara disponible en:
+```bash
+http://localhost:8000
+```
+
+La documentacion automatica de FastAPI:
+```bash
+http://localhost:8000/docs
+```
+
 ## Carga de información
 Antes de utilizar los endpoints de métricas es necesario cargar un archivo CSV mediante el endpoint de subida.
 
@@ -136,3 +174,48 @@ volumes:
   - ./app.db:/app/app.db
 ```
 Esto permite que los datos sobrevivan aunque el contenedor se reinicie.
+
+---
+
+# Ejecucion del Frontend
+
+## Requisitos
+
+Tener instalado:
+
+- Node.js
+- npm
+
+---
+
+## Instalacion de dependencias
+
+Desde la carpeta del frontend:
+
+```bash
+cd Front_Promotick
+npm install
+```
+
+Levantar el frontend
+
+```bash
+npm run dev
+```
+
+El frontend estara disponible en:
+```bash
+http://localhost:5173
+```
+
+Para generar una version de produccion:
+
+```bash
+npm run build
+```
+
+Para previsualizar la version de produccion:
+
+```bash
+npm run preview
+```
