@@ -33,7 +33,7 @@ export default function AreaChartCard({ data, title, dataKey }) {
         </h2>
 
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Comparative evolution
+          Comparar evolucion
         </p>
 
       </div>

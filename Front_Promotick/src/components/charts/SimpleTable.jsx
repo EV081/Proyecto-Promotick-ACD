@@ -20,7 +20,7 @@ export default function SimpleTable({ data }) {
         </h2>
 
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Most frequent issue categories
+          Categorias de problemas mas frecuentes
         </p>
 
       </div>

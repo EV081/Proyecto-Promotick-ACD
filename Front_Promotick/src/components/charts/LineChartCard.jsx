@@ -23,7 +23,7 @@ export default function LineChartCard({ data, title, dataKey }) {
         </h2>
 
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Historical trend
+          Tendencia Historica
         </p>
       </div>
 
