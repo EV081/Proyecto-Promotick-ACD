@@ -1,0 +1,7 @@
+fastapi[standard]
+uvicorn
+pandas
+numpy
+scipy
+lxml
+python-multipart
